@@ -1,16 +1,173 @@
-  
  <html>
-<title>
-election
-</title>
-<body>
-<h1>
-voting app
-</h1>
-  <script>
-console.log(window);
-    
-console.log(window.ethereum);
-</script>
-</body>
+    <head>
+        <title>Election</title>
+        <script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js@1.0.0-beta.12/dist/web3.min.js"></script>
+    </head>
+    <body>
+        <h1>Voting</h1>
+        <br/>
+        <br/>
+        <button onclick="voting('naveen')">Vote for Naveen</button>
+        <button onclick="voting('praveen')">Vote for Praveen</button>
+        <h1 id="processing"></h1>
+        <button onclick="result()">result</button>
+        <h4 id="winner"></h4>
+        <script>
+            let web3;
+            let contractAddress = "0xe661f92f44880e7294f3a3e25d7aa0e7220f493a";
+            let abi = [
+	{
+		"constant": false,
+		"inputs": [],
+		"name": "setTime",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "candName",
+				"type": "string"
+			}
+		],
+		"name": "voting",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"name": "cand1",
+				"type": "string"
+			},
+			{
+				"name": "cand2",
+				"type": "string"
+			}
+		],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "candidateNames",
+		"outputs": [
+			{
+				"name": "cand1",
+				"type": "string"
+			},
+			{
+				"name": "cand2",
+				"type": "string"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "currentTime",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "result",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	}
+]
+            let contInstance;
+            
+            if(window.web3 != undefined){
+                web3 = new Web3(window.web3.currentProvider);
+                contInstance = new web3.eth.Contract(abi, contractAddress);
+                 window.ethereum.enable()
+            }
+            else {
+                alert("plese install metamask.");
+            }
+
+            function result(){
+                contInstance.methods.result()
+                .call(function(res){
+                        if(res == 1){
+                            return alert("naveen won");
+                        }
+                        else if(res == 2){
+                            return alert("praveen won");
+                        }
+                        else if(res == 3){
+                            return alert("Tie");
+                        }  
+                        else {
+                            alert("wait until 10.30 PM")
+                        }
+                })   
+            }
+
+            function stopProcessing(){
+                document.getElementById("processing").innerText = "";
+            }
+
+            function voting(candName) {
+                document.getElementById("processing").innerText = "processing ...";
+                window.web3.eth.getAccounts((err,res) => {
+                    if(err){
+                        stopProcessing();
+                    }
+                    contInstance.methods.voting(candName).send({from:res[0]})
+                    .on('transactionHash', function(hash){
+                        isSuccess(hash);
+                    })
+                })
+            }
+
+            function isSuccess(txHash) {
+                web3.eth.getTransactionReceipt(txHash,function(err,res){
+                    if(err){
+                        stopProcessing();
+                        return;
+                    }
+                    else if(res) {
+                        stopProcessing();
+                        if(res.status == "0x0") {
+                            return alert("txFailed");
+                        }
+                        else {
+                            return alert("success");
+                        }
+                    }
+                    else {
+                        isSuccess(txHash)
+                    }
+                })
+            }
+        </script>
+    </body>
 </html>
+
