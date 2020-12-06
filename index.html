@@ -1,20 +1,23 @@
- <html>
+<html>
     <head>
-        <title>Election</title>
+        <title>
+            Election
+        </title>
         <script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js@1.0.0-beta.12/dist/web3.min.js"></script>
     </head>
     <body>
-        <h1>Voting</h1>
-        <br/>
-        <br/>
-        <button onclick="voting('naveen')">Vote for Naveen</button>
-        <button onclick="voting('praveen')">Vote for Praveen</button>
-        <h1 id="processing"></h1>
-        <button onclick="result()">result</button>
-        <h4 id="winner"></h4>
+        <h1 style="text-align: center">Blockchain Voting</h1>
+
+        <button onclick="voting('Rahul')">Vote Rahul</button>
+        <button onclick="voting('Kiran')">Vote Kiran</button>
+
+        <h3>Votes received for Rahul:<span id="rahulVoteCount">0</span></h3>
+        <h3>Votes received for Kiran:<span id="kiranVoteCount">0</span></h3>
+
+        <button onclick="result()">winner</button>
         <script>
             let web3;
-            let contractAddress = "0xe661f92f44880e7294f3a3e25d7aa0e7220f493a";
+            let contractAddress = "0x056e04c42c0b0930aca6c27bbb23f08cc364e2ef";
             let abi = [
 	{
 		"constant": false,
@@ -55,16 +58,28 @@
 		"type": "constructor"
 	},
 	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"name": "",
+				"type": "string"
+			}
+		],
+		"name": "candReg",
+		"type": "event"
+	},
+	{
 		"constant": true,
 		"inputs": [],
 		"name": "candidateNames",
 		"outputs": [
 			{
-				"name": "cand1",
+				"name": "",
 				"type": "string"
 			},
 			{
-				"name": "cand2",
+				"name": "",
 				"type": "string"
 			}
 		],
@@ -76,6 +91,39 @@
 		"constant": true,
 		"inputs": [],
 		"name": "currentTime",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "eleStartTime",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "candName",
+				"type": "string"
+			}
+		],
+		"name": "getNumberOfVotesRecieved",
 		"outputs": [
 			{
 				"name": "",
@@ -101,61 +149,56 @@
 		"type": "function"
 	}
 ]
-            let contInstance;
             
+            let contInstance;
+
             if(window.web3 != undefined){
+                //metamask found ethereum browser
+                window.ethereum.enable();
                 web3 = new Web3(window.web3.currentProvider);
-                contInstance = new web3.eth.Contract(abi, contractAddress);
-                 window.ethereum.enable()
+                contInstance = new web3.eth.Contract(abi,contractAddress);
+                updateCandVotes();
+
             }
             else {
-                alert("plese install metamask.");
+                alert("please install metamask");
             }
-
-            function result(){
-                contInstance.methods.result()
-                .call(function(res){
-                        if(res == 1){
-                            return alert("naveen won");
-                        }
-                        else if(res == 2){
-                            return alert("praveen won");
-                        }
-                        else if(res == 3){
-                            return alert("Tie");
-                        }  
-                        else {
-                            alert("wait until 10.30 PM")
-                        }
-                })   
-            }
-
-            function stopProcessing(){
-                document.getElementById("processing").innerText = "";
-            }
-
-            function voting(candName) {
-                document.getElementById("processing").innerText = "processing ...";
-                window.web3.eth.getAccounts((err,res) => {
-                    if(err){
-                        stopProcessing();
-                    }
-                    contInstance.methods.voting(candName).send({from:res[0]})
-                    .on('transactionHash', function(hash){
+            function voting(candName){
+                window.web3.eth.getAccounts((err,res)=>{
+                    let userAddress = res[0];
+                    contInstance.methods.voting(candName).send({from:userAddress}).on('transactionHash',function(hash){
                         isSuccess(hash);
-                    })
+                    });
                 })
             }
 
-            function isSuccess(txHash) {
-                web3.eth.getTransactionReceipt(txHash,function(err,res){
-                    if(err){
-                        stopProcessing();
-                        return;
+            function updateCandVotes() {
+
+                updateRahulVote();
+                updateKiranVote();
+            }
+
+            function updateRahulVote() {
+                contInstance.methods.getNumberOfVotesRecieved("Rahul").call(function(error,data){
+                    document.getElementById("rahulVoteCount").innerText = data;
+                    updateRahulVote();
+                });
+            }
+
+            function updateKiranVote() {
+                contInstance.methods.getNumberOfVotesRecieved("Kiran").call(function(error,data){
+                    document.getElementById("kiranVoteCount").innerText = data;
+                    updateKiranVote();
+                });
+            }
+
+            function isSuccess(hash) {
+                web3.eth.getTransactionReceipt(hash,function(err,res){
+                    if(err) {
+                        return alert("Error");
                     }
-                    else if(res) {
-                        stopProcessing();
-                        if(res.status == "0x0") {
+                    else if(res){
+                        if(res.status == "0x0"){
                             return alert("txFailed");
                         }
                         else {
@@ -163,11 +206,28 @@
                         }
                     }
                     else {
-                        isSuccess(txHash)
+                        //pending
+                        isSuccess(hash);
                     }
                 })
+            }
+            function result() {
+                contInstance.methods.result().call(function(error,resCase){
+                    if(resCase == 4){
+                            return alert("voting isn't started");
+                    }
+                    else if(resCase == 0 ) {
+                        return alert("voting isnt ended");
+                    }
+                    else if(resCase == 1){
+                        return alert("if candidate 1 won the election");
+                    }
+                    else if(resCase == 2){
+                        return alert("if candidate 2 won the election");
+                    }
+                    return alert("Tie:both recieves the same");
+                });
             }
         </script>
     </body>
 </html>
-
