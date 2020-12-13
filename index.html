@@ -6,19 +6,20 @@
         <script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js@1.0.0-beta.12/dist/web3.min.js"></script>
     </head>
     <body>
-        <h1 style="text-align: center">Blockchain Voting</h1>
+        <h1 style="text-align: center">Blockchain Based Voting</h1>
 
         <button onclick="voting('Rahul')">Vote Rahul</button>
         <button onclick="voting('Kiran')">Vote Kiran</button>
 
-        <h3>Votes received for Rahul:<span id="rahulVoteCount">0</span></h3>
-        <h3>Votes received for Kiran:<span id="kiranVoteCount">0</span></h3>
+        <h3>Votes Received for Rahul:<span id="rahulVoteCount">0</span></h3>
+        <h3>Votes Received for Kiran:<span id="kiranVoteCount">0</span></h3>
 
-        <button onclick="result()">winner</button>
+        <br/>
+        <button onclick="result();">Result</button>
+
         <script>
             let web3;
-            let contractAddress = "0x056e04c42c0b0930aca6c27bbb23f08cc364e2ef";
-            let abi = [
+            let abiJson = [
 	{
 		"constant": false,
 		"inputs": [],
@@ -56,18 +57,6 @@
 		"payable": false,
 		"stateMutability": "nonpayable",
 		"type": "constructor"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": false,
-				"name": "",
-				"type": "string"
-			}
-		],
-		"name": "candReg",
-		"type": "event"
 	},
 	{
 		"constant": true,
@@ -123,7 +112,7 @@
 				"type": "string"
 			}
 		],
-		"name": "getNumberOfVotesRecieved",
+		"name": "getNumberOfVotesReceived",
 		"outputs": [
 			{
 				"name": "",
@@ -149,85 +138,88 @@
 		"type": "function"
 	}
 ]
-            
+        // console.log(Web3);
+            let contAddress = "0xd7c63a8e00ef0f25addf7e012b2fac9cc87ef754";
             let contInstance;
-
-            if(window.web3 != undefined){
-                //metamask found ethereum browser
+            if(window.web3 != undefined) {
                 window.ethereum.enable();
                 web3 = new Web3(window.web3.currentProvider);
-                contInstance = new web3.eth.Contract(abi,contractAddress);
+                contInstance = new web3.eth.Contract(abiJson,contAddress);
                 updateCandVotes();
-
             }
             else {
-                alert("please install metamask");
+                alert("Please Install Metamask!");
             }
-            function voting(candName){
-                window.web3.eth.getAccounts((err,res)=>{
-                    let userAddress = res[0];
-                    contInstance.methods.voting(candName).send({from:userAddress}).on('transactionHash',function(hash){
-                        isSuccess(hash);
-                    });
+            
+            function updateCandVotes() {
+                updateRahulVotes();
+                updateKiranVotes();
+            }
+
+            function updateRahulVotes() {
+                contInstance.methods.getNumberOfVotesReceived("Rahul").call(function(err,rahulVotes){
+                    document.getElementById("rahulVoteCount").innerText = rahulVotes;
+                    updateRahulVotes();
                 })
             }
 
-            function updateCandVotes() {
-
-                updateRahulVote();
-                updateKiranVote();
+            function updateKiranVotes() {
+                contInstance.methods.getNumberOfVotesReceived("Kiran").call(function(err,kiranVotes){
+                    document.getElementById("kiranVoteCount").innerText = kiranVotes;
+                    updateKiranVotes();
+                })
             }
 
-            function updateRahulVote() {
-                contInstance.methods.getNumberOfVotesRecieved("Rahul").call(function(error,data){
-                    document.getElementById("rahulVoteCount").innerText = data;
-                    updateRahulVote();
-                });
+            function voting(candName){
+                //contract call
+                window.web3.eth.getAccounts((err,res)=>{
+                    let userAddress = res[0];
+                    contInstance.methods.voting(candName).send({from:userAddress}).on('transactionHash',function(hash){
+                        // getTransactionReceipt
+                        isSuccess(hash);
+                    })
+                })
+
             }
 
-            function updateKiranVote() {
-                contInstance.methods.getNumberOfVotesRecieved("Kiran").call(function(error,data){
-                    document.getElementById("kiranVoteCount").innerText = data;
-                    updateKiranVote();
-                });
-            }
-
-            function isSuccess(hash) {
+            function isSuccess(hash){
                 web3.eth.getTransactionReceipt(hash,function(err,res){
-                    if(err) {
+                    if(err){
                         return alert("Error");
                     }
                     else if(res){
                         if(res.status == "0x0"){
-                            return alert("txFailed");
+                            return alert("Tx Failed");
                         }
                         else {
-                            return alert("success");
+                            return alert("Success!");
                         }
                     }
                     else {
-                        //pending
-                        isSuccess(hash);
+                        //pending pool
+                        return isSuccess(hash);
                     }
                 })
             }
-            function result() {
-                contInstance.methods.result().call(function(error,resCase){
+
+            function result(){
+                contInstance.methods.result().call(function(err,resCase){
                     if(resCase == 4){
-                            return alert("voting isn't started");
+                        return alert("Voting Is not started");
                     }
-                    else if(resCase == 0 ) {
-                        return alert("voting isnt ended");
+                    else if(resCase == 0){
+                        return alert("Voting Is not ended")
                     }
                     else if(resCase == 1){
-                        return alert("if candidate 1 won the election");
+                        return alert("Rahul Won!");
                     }
                     else if(resCase == 2){
-                        return alert("if candidate 2 won the election");
+                        return alert("Kiran won");
                     }
-                    return alert("Tie:both recieves the same");
-                });
+                    return alert("Tie:both recieve same!");
+                })
             }
+
         </script>
     </body>
 </html>
