@@ -1,157 +1,157 @@
 <html>
     <head>
-        <title>
-            Election
-        </title>
-        <script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js@1.0.0-beta.12/dist/web3.min.js"></script>
+        <title>Voting</title>
+        <script  src="https://cdn.jsdelivr.net/gh/ethereum/web3.js@1.0.0-beta.12/dist/web3.min.js"></script>
     </head>
     <body>
-        <h1 style="text-align: center">Blockchain Based Voting</h1>
+        <h1 style="text-align: center">Ethereum based voting</h1>
+        <button onclick="voting('Rahul')"> Vote Rahul</button>
+        <button onclick="voting('Kiran')"> Vote Kiran</button>
 
-        <button onclick="voting('Rahul')">Vote Rahul</button>
-        <button onclick="voting('Kiran')">Vote Kiran</button>
-
-        <h3>Votes Received for Rahul:<span id="rahulVoteCount">0</span></h3>
-        <h3>Votes Received for Kiran:<span id="kiranVoteCount">0</span></h3>
-
-        <br/>
+        <h3>Rahul Votes:<span id="rahulVoteCount">0</span></h3>
+        <h3>Kiran Votes:<span id="kiranVoteCount">0</span></h3>
         <button onclick="result();">Result</button>
-
         <script>
             let web3;
-            let abiJson = [
-	{
-		"constant": false,
-		"inputs": [],
-		"name": "setTime",
-		"outputs": [],
-		"payable": false,
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"constant": false,
-		"inputs": [
-			{
-				"name": "candName",
-				"type": "string"
-			}
-		],
-		"name": "voting",
-		"outputs": [],
-		"payable": false,
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"name": "cand1",
-				"type": "string"
-			},
-			{
-				"name": "cand2",
-				"type": "string"
-			}
-		],
-		"payable": false,
-		"stateMutability": "nonpayable",
-		"type": "constructor"
-	},
-	{
-		"constant": true,
-		"inputs": [],
-		"name": "candidateNames",
-		"outputs": [
-			{
-				"name": "",
-				"type": "string"
-			},
-			{
-				"name": "",
-				"type": "string"
-			}
-		],
-		"payable": false,
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"constant": true,
-		"inputs": [],
-		"name": "currentTime",
-		"outputs": [
-			{
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"payable": false,
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"constant": true,
-		"inputs": [],
-		"name": "eleStartTime",
-		"outputs": [
-			{
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"payable": false,
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"constant": true,
-		"inputs": [
-			{
-				"name": "candName",
-				"type": "string"
-			}
-		],
-		"name": "getNumberOfVotesReceived",
-		"outputs": [
-			{
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"payable": false,
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"constant": true,
-		"inputs": [],
-		"name": "result",
-		"outputs": [
-			{
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"payable": false,
-		"stateMutability": "view",
-		"type": "function"
-	}
-]
-        // console.log(Web3);
-            let contAddress = "0xd7c63a8e00ef0f25addf7e012b2fac9cc87ef754";
+            var abi = [
+                {
+                    "constant": false,
+                    "inputs": [],
+                    "name": "setTime",
+                    "outputs": [],
+                    "payable": false,
+                    "stateMutability": "nonpayable",
+                    "type": "function"
+                },
+                {
+                    "constant": false,
+                    "inputs": [
+                        {
+                            "name": "candName",
+                            "type": "string"
+                        }
+                    ],
+                    "name": "voting",
+                    "outputs": [],
+                    "payable": false,
+                    "stateMutability": "nonpayable",
+                    "type": "function"
+                },
+                {
+                    "inputs": [
+                        {
+                            "name": "cand1",
+                            "type": "string"
+                        },
+                        {
+                            "name": "cand2",
+                            "type": "string"
+                        }
+                    ],
+                    "payable": false,
+                    "stateMutability": "nonpayable",
+                    "type": "constructor"
+                },
+                {
+                    "constant": true,
+                    "inputs": [],
+                    "name": "candidateNames",
+                    "outputs": [
+                        {
+                            "name": "",
+                            "type": "string"
+                        },
+                        {
+                            "name": "",
+                            "type": "string"
+                        }
+                    ],
+                    "payable": false,
+                    "stateMutability": "view",
+                    "type": "function"
+                },
+                {
+                    "constant": true,
+                    "inputs": [],
+                    "name": "currentTime",
+                    "outputs": [
+                        {
+                            "name": "",
+                            "type": "uint256"
+                        }
+                    ],
+                    "payable": false,
+                    "stateMutability": "view",
+                    "type": "function"
+                },
+                {
+                    "constant": true,
+                    "inputs": [],
+                    "name": "eleStartTime",
+                    "outputs": [
+                        {
+                            "name": "",
+                            "type": "uint256"
+                        }
+                    ],
+                    "payable": false,
+                    "stateMutability": "view",
+                    "type": "function"
+                },
+                {
+                    "constant": true,
+                    "inputs": [
+                        {
+                            "name": "candName",
+                            "type": "string"
+                        }
+                    ],
+                    "name": "getNumberOfVotesReceived",
+                    "outputs": [
+                        {
+                            "name": "",
+                            "type": "uint256"
+                        }
+                    ],
+                    "payable": false,
+                    "stateMutability": "view",
+                    "type": "function"
+                },
+                {
+                    "constant": true,
+                    "inputs": [],
+                    "name": "result",
+                    "outputs": [
+                        {
+                            "name": "",
+                            "type": "uint256"
+                        }
+                    ],
+                    "payable": false,
+                    "stateMutability": "view",
+                    "type": "function"
+                }
+            ]
+            var contractAddress = "0xd73dd308dc23d5c1b4db45badfe6f320e3f246aa";
             let contInstance;
             if(window.web3 != undefined) {
                 window.ethereum.enable();
                 web3 = new Web3(window.web3.currentProvider);
-                contInstance = new web3.eth.Contract(abiJson,contAddress);
-                updateCandVotes();
+                contInstance = new web3.eth.Contract(abi,contractAddress);
+                updateVotes();
             }
             else {
-                alert("Please Install Metamask!");
+                alert("web3 object not loaded !");
             }
-            
-            function updateCandVotes() {
+
+            function voting(_candidateName) {
+                let userAddress = window.ethereum.selectedAddress;
+                contInstance.methods.voting(_candidateName).send({from:userAddress}).on('transactionHash',function(hash){
+                    isSuccess(hash);
+                })
+            }
+
+            function updateVotes() {
                 updateRahulVotes();
                 updateKiranVotes();
             }
@@ -170,29 +170,42 @@
                 })
             }
 
-            function voting(candName){
-                //contract call
-                window.web3.eth.getAccounts((err,res)=>{
-                    let userAddress = res[0];
-                    contInstance.methods.voting(candName).send({from:userAddress}).on('transactionHash',function(hash){
-                        // getTransactionReceipt
-                        isSuccess(hash);
-                    })
+            function result() {
+                contInstance.methods.result().call(function(err,result){
+                    if(err){
+                        return alert(Ërror)
+                    }
+                    else {
+                        if(result == 0){
+                            return alert("voting not ended yet");
+                        }
+                        else if(result == 1){
+                            return alert("Rahul won the election");
+                        }
+                        else if(result == 2){
+                            return alert("Kiran won the election");
+                        }
+                        else if(result == 3){
+                            return alert("Tie !");
+                        }
+                        else if(result == 4){
+                            return alert("voting not started yet");
+                        }
+                    }
                 })
-
             }
 
-            function isSuccess(hash){
+            function isSuccess(hash) {
                 web3.eth.getTransactionReceipt(hash,function(err,res){
-                    if(err){
-                        return alert("Error");
+                    if(err) {
+                        return alert("Error: Try again");
                     }
-                    else if(res){
+                    else if(res) {
                         if(res.status == "0x0"){
                             return alert("Tx Failed");
                         }
                         else {
-                            return alert("Success!");
+                            return alert("Success:Voted !");
                         }
                     }
                     else {
@@ -201,25 +214,6 @@
                     }
                 })
             }
-
-            function result(){
-                contInstance.methods.result().call(function(err,resCase){
-                    if(resCase == 4){
-                        return alert("Voting Is not started");
-                    }
-                    else if(resCase == 0){
-                        return alert("Voting Is not ended")
-                    }
-                    else if(resCase == 1){
-                        return alert("Rahul Won!");
-                    }
-                    else if(resCase == 2){
-                        return alert("Kiran won");
-                    }
-                    return alert("Tie:both recieve same!");
-                })
-            }
-
         </script>
     </body>
 </html>
