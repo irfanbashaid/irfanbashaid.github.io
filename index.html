@@ -1,103 +1,83 @@
 <html>
     <head>
-        <title>Voting</title>
-        <script  src="https://cdn.jsdelivr.net/gh/ethereum/web3.js@1.0.0-beta.12/dist/web3.min.js"></script>
+        <title>Ethereum voting</title>
+        <script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js@1.0.0-beta.34/dist/web3.js"></script>
     </head>
     <body>
-        <h1 style="text-align: center">Ethereum based voting</h1>
-        <button onclick="voting('Rahul')"> Vote Rahul</button>
-        <button onclick="voting('Kiran')"> Vote Kiran</button>
+        <div>
+            <h1>Ethereum based voting</h1>
+        </div>
+        <div id="candDetailsParent">
+            <div id="candDetails">
+                <div>
+                    <div>
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/5/56/Donald_Trump_official_portrait.jpg"/>
+                    </div>
+                    <div>
+                        Kiran
+                    </div>
+                    <div>
+                        <span id="kiranVotes">0</span>&nbsp;Votes
+                    </div>
+                    <div>
+                        <button onclick="vote('Kiran')">Vote</button>
+                    </div>
+                </div>
+                <div>
+                    <div>
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/6/68/Joe_Biden_presidential_portrait.jpg"/>
+                    </div>
+                    <div>
+                        Kumar
+                    </div>
+                    <div>
+                        <span id="kumarVotes">0</span>&nbsp;Votes
+                    </div>
+                    <div>
+                        <button onclick="vote('Kumar')">Vote</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div>
+            <button id="result" onclick="result()">Result</button>
+        </div>
+        <style>
 
-        <h3>Rahul Votes:<span id="rahulVoteCount">0</span></h3>
-        <h3>Kiran Votes:<span id="kiranVoteCount">0</span></h3>
-        <button onclick="result();">Result</button>
+            body {
+                text-align: center;
+            }
+
+            img {
+                width: 160px;
+            }
+
+            #candDetailsParent {
+                text-align: center;
+            }
+
+            #candDetails {
+                display: flex;
+                justify-content: center;
+            }
+            #candDetails div{
+                margin: 10px;
+            }
+
+            button {
+                width: 100px;
+                height: 33.33px;
+                background: blue;
+                color: white;
+            }
+
+            #result {
+                background-color: brown;
+                margin-top: 50px;
+            }
+        </style>
         <script>
-            let web3;
-            var abi = [
-                {
-                    "constant": false,
-                    "inputs": [],
-                    "name": "setTime",
-                    "outputs": [],
-                    "payable": false,
-                    "stateMutability": "nonpayable",
-                    "type": "function"
-                },
-                {
-                    "constant": false,
-                    "inputs": [
-                        {
-                            "name": "candName",
-                            "type": "string"
-                        }
-                    ],
-                    "name": "voting",
-                    "outputs": [],
-                    "payable": false,
-                    "stateMutability": "nonpayable",
-                    "type": "function"
-                },
-                {
-                    "inputs": [
-                        {
-                            "name": "cand1",
-                            "type": "string"
-                        },
-                        {
-                            "name": "cand2",
-                            "type": "string"
-                        }
-                    ],
-                    "payable": false,
-                    "stateMutability": "nonpayable",
-                    "type": "constructor"
-                },
-                {
-                    "constant": true,
-                    "inputs": [],
-                    "name": "candidateNames",
-                    "outputs": [
-                        {
-                            "name": "",
-                            "type": "string"
-                        },
-                        {
-                            "name": "",
-                            "type": "string"
-                        }
-                    ],
-                    "payable": false,
-                    "stateMutability": "view",
-                    "type": "function"
-                },
-                {
-                    "constant": true,
-                    "inputs": [],
-                    "name": "currentTime",
-                    "outputs": [
-                        {
-                            "name": "",
-                            "type": "uint256"
-                        }
-                    ],
-                    "payable": false,
-                    "stateMutability": "view",
-                    "type": "function"
-                },
-                {
-                    "constant": true,
-                    "inputs": [],
-                    "name": "eleStartTime",
-                    "outputs": [
-                        {
-                            "name": "",
-                            "type": "uint256"
-                        }
-                    ],
-                    "payable": false,
-                    "stateMutability": "view",
-                    "type": "function"
-                },
+            let abi = [
                 {
                     "constant": true,
                     "inputs": [
@@ -106,7 +86,7 @@
                             "type": "string"
                         }
                     ],
-                    "name": "getNumberOfVotesReceived",
+                    "name": "getCurrentVotes",
                     "outputs": [
                         {
                             "name": "",
@@ -115,6 +95,15 @@
                     ],
                     "payable": false,
                     "stateMutability": "view",
+                    "type": "function"
+                },
+                {
+                    "constant": false,
+                    "inputs": [],
+                    "name": "startVoting",
+                    "outputs": [],
+                    "payable": false,
+                    "stateMutability": "nonpayable",
                     "type": "function"
                 },
                 {
@@ -124,95 +113,114 @@
                     "outputs": [
                         {
                             "name": "",
+                            "type": "string"
+                        }
+                    ],
+                    "payable": false,
+                    "stateMutability": "view",
+                    "type": "function"
+                },
+                {
+                    "constant": true,
+                    "inputs": [],
+                    "name": "getBlockchainTime",
+                    "outputs": [
+                        {
+                            "name": "",
                             "type": "uint256"
                         }
                     ],
                     "payable": false,
                     "stateMutability": "view",
                     "type": "function"
+                },
+                {
+                    "constant": false,
+                    "inputs": [
+                        {
+                            "name": "candName",
+                            "type": "string"
+                        }
+                    ],
+                    "name": "vote",
+                    "outputs": [],
+                    "payable": false,
+                    "stateMutability": "nonpayable",
+                    "type": "function"
+                },
+                {
+                    "inputs": [],
+                    "payable": false,
+                    "stateMutability": "nonpayable",
+                    "type": "constructor"
                 }
             ]
-            var contractAddress = "0xd73dd308dc23d5c1b4db45badfe6f320e3f246aa";
-            let contInstance;
-            if(window.web3 != undefined) {
-                window.ethereum.enable();
-                web3 = new Web3(window.web3.currentProvider);
-                contInstance = new web3.eth.Contract(abi,contractAddress);
-                updateVotes();
-            }
-            else {
-                alert("web3 object not loaded !");
-            }
-
-            function voting(_candidateName) {
-                let userAddress = window.ethereum.selectedAddress;
-                contInstance.methods.voting(_candidateName).send({from:userAddress}).on('transactionHash',function(hash){
-                    isSuccess(hash);
-                })
-            }
-
-            function updateVotes() {
-                updateRahulVotes();
-                updateKiranVotes();
+            let contractAddress = "0x3cfc715c6b7c9ef221a5cc6c2ea910c3b5d4e9ad";
+            // console.log(window.ethereum);
+            // console.log();
+            let walletAddress = "";
+            let web3Ins = "";
+            let contIns = "";
+            init();
+            async function init() {
+                let enableRes = await window.ethereum.enable();
+                if(enableRes) {
+                    walletAddress = enableRes[0];
+                    web3Ins = new window.Web3(window.ethereum);
+                    contIns = new web3Ins.eth.Contract(abi, contractAddress);
+                    console.log(contIns)
+                    checkVotes();
+                }
             }
 
-            function updateRahulVotes() {
-                contInstance.methods.getNumberOfVotesReceived("Rahul").call(function(err,rahulVotes){
-                    document.getElementById("rahulVoteCount").innerText = rahulVotes;
-                    updateRahulVotes();
-                })
-            }
-
-            function updateKiranVotes() {
-                contInstance.methods.getNumberOfVotesReceived("Kiran").call(function(err,kiranVotes){
-                    document.getElementById("kiranVoteCount").innerText = kiranVotes;
-                    updateKiranVotes();
-                })
+            function checkVotes() {
+                checkKiranVotes();
+                checkKumarVotes();
             }
 
             function result() {
-                contInstance.methods.result().call(function(err,result){
-                    if(err){
-                        return alert(Ërror)
-                    }
-                    else {
-                        if(result == 0){
-                            return alert("voting not ended yet");
-                        }
-                        else if(result == 1){
-                            return alert("Rahul won the election");
-                        }
-                        else if(result == 2){
-                            return alert("Kiran won the election");
-                        }
-                        else if(result == 3){
-                            return alert("Tie !");
-                        }
-                        else if(result == 4){
-                            return alert("voting not started yet");
-                        }
+                contIns.methods.result().call(function(error, result){
+                    if(result){
+                        return alert(result);
                     }
                 })
             }
 
-            function isSuccess(hash) {
-                web3.eth.getTransactionReceipt(hash,function(err,res){
-                    if(err) {
-                        return alert("Error: Try again");
+            function checkKiranVotes() {
+                contIns.methods.getCurrentVotes("Kiran").call(function(error, result){
+                    if(result){
+                        document.getElementById("kiranVotes").innerHTML = result;
                     }
-                    else if(res) {
-                        if(res.status == "0x0"){
-                            return alert("Tx Failed");
-                        }
-                        else {
-                            return alert("Success:Voted !");
-                        }
+                    checkKiranVotes();
+                });
+            }
+
+            function checkKumarVotes() {
+                contIns.methods.getCurrentVotes("Kumar").call(function(error, result){
+                    if(result){
+                        document.getElementById("kumarVotes").innerHTML = result;
+                    }
+                    checkKumarVotes();
+                });
+            }
+
+            function vote(candidateName) {
+                contIns.methods.vote(candidateName).send({from: walletAddress})
+                .on('transactionHash', function(hash){
+                })
+                .on('receipt', function(receipt){
+                    console.log(receipt);
+                    if(receipt && receipt.status) {
+                        return alert("Successfully voted!")
                     }
                     else {
-                        //pending pool
-                        return isSuccess(hash);
+                        return alert("Voting not successfull!");
                     }
                 })
+                .on('confirmation', function(confirmationNumber, receipt){
+                })
+                .on('error', function(error, receipt) {
+                });
             }
         </script>
     </body>
