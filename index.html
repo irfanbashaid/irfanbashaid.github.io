@@ -141,7 +141,7 @@
                 });
             }
             function getVoteCount(candName){
-                contractIns.methods.voteCount(voteCount).call(function(error, result){
+                contractIns.methods.voteCount(candName).call(function(error, result){
                     if(result){
                         document.getElementById(candName).innerText = result;
                     }
