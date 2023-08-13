@@ -1,64 +1,85 @@
 <html>
     <head>
-        <title>Election</title>
-        <script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js@1.0.0-beta.34/dist/web3.min.js"></script>
+        <title>Ethereum voting</title>
+        <script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js@1.0.0-beta.34/dist/web3.min.js" ></script>
     </head>
     <body>
-        <h2>Blockchain based voting</h2>
-        <div class="class-1">
-            <div class="class-2-pdr-25">
-                <h5>Arun</h5>
-                <h5>votes:<span id="Arun">0</span></h5>
-                <button onclick="vote('Arun')" class="button-1">Vote</button>
+        <h2>Blockchain based voting platform</h2>
+        <div class="candParentDiv">
+            <div class="TrumpDiv">
+                <h5>Trump</h5>
+                <img src="https://upload.wikimedia.org/wikipedia/commons/5/56/Donald_Trump_official_portrait.jpg"/>
+                <p>votes: <span id="TrumpVotes">0</span></p>
+                <button class="voteBtn" onclick="voting('Trump')">vote</button>
             </div>
-            <div class="class-2-pdl-25">
-                <h5>Prasanth</h5>
-                <h5>votes:<span id="Prasanth">0</span></h5>
-                <button onclick="vote('Prasanth')" class="button-1">Vote</button>
+            <div class="BidenDiv">
+                <h5>Biden</h5>
+                <img src="https://upload.wikimedia.org/wikipedia/commons/6/68/Joe_Biden_presidential_portrait.jpg"/>
+                <p>votes: <span id="BidenVotes">0</span></p>
+                <button class="voteBtn" onclick="voting('Biden')">vote</button>
             </div>
         </div>
-        <div id="resultDiv">
-            <button onclick="result()" class="button-2">Result</button>
+        <div>
+            <button class="resultBtn" onclick="result()">Result</button>
         </div>
+        <style>
+            img {
+                width: 130px;
+                height: 150px;
+            }
+            body{
+                text-align: center;
+            }
+            .candParentDiv {
+                display: flex;
+            }
+            .TrumpDiv {
+                margin-left: auto;
+                margin-right: 20px;
+            }
+            .BidenDiv {
+                margin-left: 20px;
+                margin-right: auto;
+            }
+            .voteBtn{
+                background: deepskyblue;
+                padding: 5px 10px 5px 10px;
+            }
+            .resultBtn {
+                background: red;
+                padding: 10px 20px 10px 20px;
+                margin-top: 40px;
+            }
+        </style>
         <script>
-            let web3Ins;
-            let walletAddress;
-            var contractIns;
-            let jsonInterface = [
-                {
-                    "constant": false,
-                    "inputs": [],
-                    "name": "startElection",
-                    "outputs": [],
-                    "payable": false,
-                    "stateMutability": "nonpayable",
-                    "type": "function"
-                },
-                {
-                    "constant": false,
-                    "inputs": [
-                        {
-                            "internalType": "string",
-                            "name": "candName",
-                            "type": "string"
-                        }
-                    ],
-                    "name": "voting",
-                    "outputs": [],
-                    "payable": false,
-                    "stateMutability": "nonpayable",
-                    "type": "function"
-                },
+            let abiJson = [
                 {
                     "inputs": [],
-                    "payable": false,
                     "stateMutability": "nonpayable",
                     "type": "constructor"
                 },
                 {
-                    "constant": true,
+                    "inputs": [
+                        {
+                            "internalType": "string",
+                            "name": "",
+                            "type": "string"
+                        }
+                    ],
+                    "name": "candReg",
+                    "outputs": [
+                        {
+                            "internalType": "bool",
+                            "name": "",
+                            "type": "bool"
+                        }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function"
+                },
+                {
                     "inputs": [],
-                    "name": "currentTime",
+                    "name": "getTime",
                     "outputs": [
                         {
                             "internalType": "uint256",
@@ -66,12 +87,10 @@
                             "type": "uint256"
                         }
                     ],
-                    "payable": false,
                     "stateMutability": "view",
                     "type": "function"
                 },
                 {
-                    "constant": true,
                     "inputs": [],
                     "name": "result",
                     "outputs": [
@@ -81,12 +100,17 @@
                             "type": "string"
                         }
                     ],
-                    "payable": false,
                     "stateMutability": "view",
                     "type": "function"
                 },
                 {
-                    "constant": true,
+                    "inputs": [],
+                    "name": "startVoting",
+                    "outputs": [],
+                    "stateMutability": "nonpayable",
+                    "type": "function"
+                },
+                {
                     "inputs": [
                         {
                             "internalType": "string",
@@ -94,7 +118,7 @@
                             "type": "string"
                         }
                     ],
-                    "name": "voteCount",
+                    "name": "voteMap",
                     "outputs": [
                         {
                             "internalType": "uint256",
@@ -102,88 +126,75 @@
                             "type": "uint256"
                         }
                     ],
-                    "payable": false,
                     "stateMutability": "view",
+                    "type": "function"
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "string",
+                            "name": "candName",
+                            "type": "string"
+                        }
+                    ],
+                    "name": "voting",
+                    "outputs": [],
+                    "stateMutability": "nonpayable",
                     "type": "function"
                 }
             ]
-            let contractAddress = "0x2E6014027a78b17c948068a941Fcedcb4A50D0bd";
-            init();
-            async function init() {
-                // console.log(window.web3);
-                web3Ins = new window.Web3(window.ethereum);
-                let res = await window.ethereum.enable();
-                walletAddress = res[0];
-                console.log(walletAddress);
-                contractIns = new web3Ins.eth.Contract(jsonInterface, contractAddress);
-                getVoteCount("Arun");
-                getVoteCount("Prasanth");
-
+            let contractAddress = "0x58f5e19e216161d52a53de6ba79ae1da45385bfc";    
+            let walletAddress = "";
+            let web3Instance;
+            let VotingContract;
+            init = async() => {
+                if(window.ethereum) {
+                    try {
+                        let enableRes = await window.ethereum.enable();
+                        walletAddress = enableRes[0];
+                        web3Instance = new window.Web3(window.ethereum);
+                        VotingContract = new web3Instance.eth.Contract(abiJson, contractAddress);
+                        _updateVotes();
+                    }
+                    catch(e) {
+                        console.log(e);
+                        return alert("Account not connected");
+                    }
+                }
+                else {
+                    return alert("Please install metamask!");
+                }
             }
-            function vote(candName) {
-                contractIns.methods.voting(candName).send({from: walletAddress})
+            init();
+            voting = (candName) => {
+                VotingContract.methods.voting(candName).send({from: walletAddress})
                 .on('receipt', function(receipt){
-                    console.log(receipt);
-                    if(receipt && receipt.status && receipt.status==true ){
-                        getVoteCount(candName);
-                        alert("Successfully voted");
+                    if(receipt && receipt.status) {
+                        _updateVotes();
+                        return alert("successfully voted!");
                     }
                     else {
-                        alert("voting failed");
+                        return alert("transaction failed!")
                     }
                 })
             }
-            function result() {
-                contractIns.methods.result().call(function(error, result){
-                    if(result){
-                        alert(result);
-                    }
+            result=() =>{
+                VotingContract.methods.result().call()
+                .then(function(result){
+                    alert(result);
                 });
             }
-            function getVoteCount(candName){
-                contractIns.methods.voteCount(candName).call(function(error, result){
-                    if(result){
-                        document.getElementById(candName).innerText = result;
-                    }
+            _updateVotes=() => {
+                updateVotes("Trump");
+                updateVotes("Biden");
+            }
+            updateVotes=(candName) =>{
+                VotingContract.methods.voteMap(candName).call()
+                .then(function(voteCount){
+                    document.getElementById(candName+'Votes').innerHTML = voteCount;
                 });
             }
         </script>
-        <style>
-            body {
-                text-align: center;
-                font-size: 33px;
-            }
-            .class-1 {
-                display: flex;
-                margin: auto;
-                justify-content: center;
-            }
-            .class-2-pdl-25 {
-                padding-left: 25px;
-            }
-            .class-2-pdr-25 {
-                padding-right: 25px;
-            }
-            .button-1 {
-                background-color: blue;
-                color: white;
-                border-radius: 5px;
-                font-size: 30px;
-                padding: 12px;
-            }
-            .button-2 {
-                background-color: green;
-                color: black;
-                border-radius: 5px;
-                font-size: 30px;
-                padding: 12px;
-            }
-            #resultDiv {
-                padding-top: 33px;
-            }
-            
-        </style>
-    </body>
-
     
+    </body>
 </html>
