@@ -1,85 +1,46 @@
+<!DOCTYPE html>
 <html>
     <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
         <title>Ethereum voting</title>
-        <script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js@1.0.0-beta.34/dist/web3.min.js" ></script>
+        <script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js@1.0.0-beta.34/dist/web3.min.js" type="text/javascript"></script>
     </head>
     <body>
-        <h2>Blockchain based voting platform</h2>
-        <div class="candParentDiv">
-            <div class="TrumpDiv">
-                <h5>Trump</h5>
-                <img src="https://upload.wikimedia.org/wikipedia/commons/5/56/Donald_Trump_official_portrait.jpg"/>
-                <p>votes: <span id="TrumpVotes">0</span></p>
-                <button class="voteBtn" onclick="voting('Trump')">vote</button>
-            </div>
-            <div class="BidenDiv">
-                <h5>Biden</h5>
-                <img src="https://upload.wikimedia.org/wikipedia/commons/6/68/Joe_Biden_presidential_portrait.jpg"/>
-                <p>votes: <span id="BidenVotes">0</span></p>
-                <button class="voteBtn" onclick="voting('Biden')">vote</button>
-            </div>
-        </div>
+        <h1>Blockchain based Voting platform</h1>
         <div>
-            <button class="resultBtn" onclick="result()">Result</button>
+            <div class="walletDet">
+                <p>Wallet Address: <span id="walletAddress"></span></p>
+                <p>wallet balance: <span id="walletBalance">0</span> ETH</p>
+            </div>
         </div>
-        <style>
-            img {
-                width: 130px;
-                height: 150px;
-            }
-            body{
-                text-align: center;
-            }
-            .candParentDiv {
-                display: flex;
-            }
-            .TrumpDiv {
-                margin-left: auto;
-                margin-right: 20px;
-            }
-            .BidenDiv {
-                margin-left: 20px;
-                margin-right: auto;
-            }
-            .voteBtn{
-                background: deepskyblue;
-                padding: 5px 10px 5px 10px;
-            }
-            .resultBtn {
-                background: red;
-                padding: 10px 20px 10px 20px;
-                margin-top: 40px;
-            }
-        </style>
+        <div class="parentCandDiv">
+            <div class="candDiv">
+                <h3>Candidate Name: Trump</h3>
+                <img class="candImg" src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/56/Donald_Trump_official_portrait.jpg/800px-Donald_Trump_official_portrait.jpg"/>
+                <p class="voteTxt">Votes:<span id="TrumpVotes">0</span></p>
+                <button onclick="voting('Trump')" class="voteBtn">Vote</button>
+            </div>
+            <div class="candDiv">
+                <h3>Candidate Name: Biden</h3>
+                <img class="candImg" src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/Joe_Biden_presidential_portrait.jpg/800px-Joe_Biden_presidential_portrait.jpg"/>
+                <p class="voteTxt">Votes:<span id="BidenVotes">0</span></p>
+                <button onclick="voting('Biden')" class="voteBtn">Vote</button>
+            </div>
+        </div>
+        <button class="ResultBtn" onclick="show_result()">Result</button>
         <script>
+            let contract_address = "0x068beae564b26458a0fcbee49c720e8cc96ee69f";
             let abiJson = [
                 {
                     "inputs": [],
+                    "payable": false,
                     "stateMutability": "nonpayable",
                     "type": "constructor"
                 },
                 {
-                    "inputs": [
-                        {
-                            "internalType": "string",
-                            "name": "",
-                            "type": "string"
-                        }
-                    ],
-                    "name": "candReg",
-                    "outputs": [
-                        {
-                            "internalType": "bool",
-                            "name": "",
-                            "type": "bool"
-                        }
-                    ],
-                    "stateMutability": "view",
-                    "type": "function"
-                },
-                {
+                    "constant": true,
                     "inputs": [],
-                    "name": "getTime",
+                    "name": "getBlockchainTime",
                     "outputs": [
                         {
                             "internalType": "uint256",
@@ -87,10 +48,33 @@
                             "type": "uint256"
                         }
                     ],
+                    "payable": false,
                     "stateMutability": "view",
                     "type": "function"
                 },
                 {
+                    "constant": true,
+                    "inputs": [
+                        {
+                            "internalType": "string",
+                            "name": "",
+                            "type": "string"
+                        }
+                    ],
+                    "name": "no_of_votes",
+                    "outputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "",
+                            "type": "uint256"
+                        }
+                    ],
+                    "payable": false,
+                    "stateMutability": "view",
+                    "type": "function"
+                },
+                {
+                    "constant": true,
                     "inputs": [],
                     "name": "result",
                     "outputs": [
@@ -100,36 +84,21 @@
                             "type": "string"
                         }
                     ],
+                    "payable": false,
                     "stateMutability": "view",
                     "type": "function"
                 },
                 {
+                    "constant": false,
                     "inputs": [],
                     "name": "startVoting",
                     "outputs": [],
+                    "payable": false,
                     "stateMutability": "nonpayable",
                     "type": "function"
                 },
                 {
-                    "inputs": [
-                        {
-                            "internalType": "string",
-                            "name": "",
-                            "type": "string"
-                        }
-                    ],
-                    "name": "voteMap",
-                    "outputs": [
-                        {
-                            "internalType": "uint256",
-                            "name": "",
-                            "type": "uint256"
-                        }
-                    ],
-                    "stateMutability": "view",
-                    "type": "function"
-                },
-                {
+                    "constant": false,
                     "inputs": [
                         {
                             "internalType": "string",
@@ -139,62 +108,101 @@
                     ],
                     "name": "voting",
                     "outputs": [],
+                    "payable": false,
                     "stateMutability": "nonpayable",
                     "type": "function"
                 }
             ]
-            let contractAddress = "0x58f5e19e216161d52a53de6ba79ae1da45385bfc";    
-            let walletAddress = "";
-            let web3Instance;
-            let VotingContract;
-            init = async() => {
-                if(window.ethereum) {
-                    try {
-                        let enableRes = await window.ethereum.enable();
-                        walletAddress = enableRes[0];
-                        web3Instance = new window.Web3(window.ethereum);
-                        VotingContract = new web3Instance.eth.Contract(abiJson, contractAddress);
-                        _updateVotes();
-                    }
-                    catch(e) {
-                        console.log(e);
-                        return alert("Account not connected");
-                    }
+                let walletAddress = "";
+                let web3Instance;
+                let contractInstance;
+                async function init() {
+                    let walletCon = await window.ethereum.enable();
+                    walletAddress = walletCon[0];
+                    document.getElementById("walletAddress").innerText = walletAddress;
+                    web3Instance = new window.Web3(window.ethereum);
+                    contractInstance = new web3Instance.eth.Contract(abiJson,contract_address); 
+                    set_no_of_votes();
+                    setWalletBalance(walletAddress);
                 }
-                else {
-                    return alert("Please install metamask!");
+                init();
+                function setWalletBalance(walletAddress) {
+                    web3Instance.eth.getBalance(walletAddress,function(error, balance){
+                        document.getElementById("walletBalance").innerText = web3Instance.utils.fromWei(balance, 'ether');
+                    })
                 }
-            }
-            init();
-            voting = (candName) => {
-                VotingContract.methods.voting(candName).send({from: walletAddress})
-                .on('receipt', function(receipt){
-                    if(receipt && receipt.status) {
-                        _updateVotes();
-                        return alert("successfully voted!");
-                    }
-                    else {
-                        return alert("transaction failed!")
-                    }
-                })
-            }
-            result=() =>{
-                VotingContract.methods.result().call()
-                .then(function(result){
-                    alert(result);
-                });
-            }
-            _updateVotes=() => {
-                updateVotes("Trump");
-                updateVotes("Biden");
-            }
-            updateVotes=(candName) =>{
-                VotingContract.methods.voteMap(candName).call()
-                .then(function(voteCount){
-                    document.getElementById(candName+'Votes').innerHTML = voteCount;
-                });
-            }
+                function voting(candName) {
+                    contractInstance.methods.voting(candName).send({from:walletAddress})
+                    .on('receipt', function(receipt){
+                        if(receipt && receipt.status && receipt.status == true) {
+                            set_no_of_votes();
+                            return alert("successfully voted for "+candName);
+                        }
+                        else {
+                            return alert("Transaction failed");
+                        }
+                    });
+                }
+                function show_result() {
+                    contractInstance.methods.result().call(function(error,status){
+                        return alert(status);
+                    })
+                }
+                function set_no_of_votes() {
+                    setBidenVotes();
+                    setTrumpVotes();
+                }
+                function setBidenVotes() {
+                    contractInstance.methods.no_of_votes("Biden").call(function(error,voteCount){
+                        document.getElementById("BidenVotes").innerText = voteCount;
+                    })
+                }
+                function setTrumpVotes() {
+                    contractInstance.methods.no_of_votes("Trump").call(function(error,voteCount){
+                        document.getElementById("TrumpVotes").innerText = voteCount;
+                    })
+                }
         </script>
-    
+        <style>
+            body{
+                text-align: center;
+            }
+            div.parentCandDiv {
+                display: flex;
+            }
+            .candDiv {
+                margin: auto;
+            }
+            .candImg {
+                width: 300px;
+                height: 377px;
+                border-radius: 14px;
+            }
+            .voteBtn {
+                width: 180px;
+                height: 60px;
+                font-size: 20px;
+                color: red;
+                background: aqua;
+                border-radius: 14px;
+            }
+            .ResultBtn {
+                margin-top: 55px;
+                width: 180px;
+                height: 60px;
+                font-size: 20px;
+                color:  white;
+                background: red;
+                border-radius: 14px;
+            }
+            .voteTxt {
+                font-size: 25px;
+            }
+            .walletDet{
+                border: 1px solid grey;
+                width: 615px;
+                margin-left: auto;
+            }
+        </style>
     </body>
 </html>
