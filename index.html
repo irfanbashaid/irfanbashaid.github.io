@@ -1,36 +1,92 @@
-<!DOCTYPE html>
 <html>
     <head>
-        <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
-        <title>Ethereum voting</title>
-        <script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js@1.0.0-beta.34/dist/web3.min.js" type="text/javascript"></script>
+        <title>Election</title>
+        <script src="https://cdn.jsdelivr.net/npm/web3@4.2.2/dist/web3.min.js" type="text/javascript"></script>
     </head>
     <body>
-        <h1>Blockchain based Voting platform</h1>
-        <div>
-            <div class="walletDet">
-                <p>Wallet Address: <span id="walletAddress"></span></p>
-                <p>wallet balance: <span id="walletBalance">0</span> ETH</p>
+        <h2>Ethereum voting</h2>
+        <div class="votersSection">
+            <div class="trumpCard">
+                <p>Trump</p>
+                <img src="https://upload.wikimedia.org/wikipedia/commons/5/56/Donald_Trump_official_portrait.jpg"/>
+                <p>No of votes: <span id="trumpVotes">0</span></p>
+                <button onclick="vote('TRUMP')" class="voteBtn">Vote</button>
+            </div>
+            <div class="bidenCard">
+                <p>Biden</p>
+                <img src="https://upload.wikimedia.org/wikipedia/commons/6/68/Joe_Biden_presidential_portrait.jpg"/>
+                <p>No of votes: <span id="bidenVotes">0</span></p>
+                <button onclick="vote('BIDEN')" class="voteBtn">Vote</button>
             </div>
         </div>
-        <div class="parentCandDiv">
-            <div class="candDiv">
-                <h3>Candidate Name: Trump</h3>
-                <img class="candImg" src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/56/Donald_Trump_official_portrait.jpg/800px-Donald_Trump_official_portrait.jpg"/>
-                <p class="voteTxt">Votes:<span id="TrumpVotes">0</span></p>
-                <button onclick="voting('Trump')" class="voteBtn">Vote</button>
-            </div>
-            <div class="candDiv">
-                <h3>Candidate Name: Biden</h3>
-                <img class="candImg" src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/Joe_Biden_presidential_portrait.jpg/800px-Joe_Biden_presidential_portrait.jpg"/>
-                <p class="voteTxt">Votes:<span id="BidenVotes">0</span></p>
-                <button onclick="voting('Biden')" class="voteBtn">Vote</button>
-            </div>
-        </div>
-        <button class="ResultBtn" onclick="show_result()">Result</button>
+        <button onclick="result()" class="resultBtn">Result</button>
+        <style>
+            body {
+                text-align: center;
+            }
+
+            .votersSection {
+                display: flex;
+            }
+
+            .trumpCard {
+                margin-left: auto;
+                margin-right: 20px;
+            }
+
+            .bidenCard {
+                margin-right: auto;
+                margin-left: 20px;
+            }
+
+            img {
+                width: 200px;
+                border-radius: 7px;
+            }
+
+            .voteBtn {
+                background: pink;
+                padding: 10px 20px;
+                border-radius: 7px;
+            }
+
+            .resultBtn {
+                background: red;
+                padding: 10px 20px;
+                border-radius: 7px;
+                margin-top: 40px;
+            }
+
+        </style>
         <script>
-            let contract_address = "0xaf1c0ee3994417b466c796111472836f9863f07f";
+            let walletAddress;
+            let web3Instance;
+            let contInstance;
             let abiJson = [
+                {
+                    "constant": false,
+                    "inputs": [],
+                    "name": "startVoting",
+                    "outputs": [],
+                    "payable": false,
+                    "stateMutability": "nonpayable",
+                    "type": "function"
+                },
+                {
+                    "constant": false,
+                    "inputs": [
+                        {
+                            "internalType": "string",
+                            "name": "candidate_name",
+                            "type": "string"
+                        }
+                    ],
+                    "name": "voting",
+                    "outputs": [],
+                    "payable": false,
+                    "stateMutability": "nonpayable",
+                    "type": "function"
+                },
                 {
                     "inputs": [],
                     "payable": false,
@@ -40,7 +96,7 @@
                 {
                     "constant": true,
                     "inputs": [],
-                    "name": "getBlockchainTime",
+                    "name": "getCurrentTime",
                     "outputs": [
                         {
                             "internalType": "uint256",
@@ -87,122 +143,50 @@
                     "payable": false,
                     "stateMutability": "view",
                     "type": "function"
-                },
-                {
-                    "constant": false,
-                    "inputs": [],
-                    "name": "startVoting",
-                    "outputs": [],
-                    "payable": false,
-                    "stateMutability": "nonpayable",
-                    "type": "function"
-                },
-                {
-                    "constant": false,
-                    "inputs": [
-                        {
-                            "internalType": "string",
-                            "name": "candName",
-                            "type": "string"
-                        }
-                    ],
-                    "name": "voting",
-                    "outputs": [],
-                    "payable": false,
-                    "stateMutability": "nonpayable",
-                    "type": "function"
                 }
             ]
-                let walletAddress = "";
-                let web3Instance;
-                let contractInstance;
-                async function init() {
-                    let walletCon = await window.ethereum.enable();
-                    walletAddress = walletCon[0];
-                    document.getElementById("walletAddress").innerText = walletAddress;
-                    web3Instance = new window.Web3(window.ethereum);
-                    contractInstance = new web3Instance.eth.Contract(abiJson,contract_address); 
-                    set_no_of_votes();
-                    setWalletBalance(walletAddress);
-                }
-                init();
-                function setWalletBalance(walletAddress) {
-                    web3Instance.eth.getBalance(walletAddress,function(error, balance){
-                        document.getElementById("walletBalance").innerText = web3Instance.utils.fromWei(balance, 'ether');
-                    })
-                }
-                function voting(candName) {
-                    contractInstance.methods.voting(candName).send({from:walletAddress})
-                    .on('receipt', function(receipt){
-                        if(receipt && receipt.status && receipt.status == true) {
-                            set_no_of_votes();
-                            return alert("successfully voted for "+candName);
-                        }
-                        else {
-                            return alert("Transaction failed");
-                        }
-                    });
-                }
-                function show_result() {
-                    contractInstance.methods.result().call(function(error,status){
-                        return alert(status);
-                    })
-                }
-                function set_no_of_votes() {
-                    setBidenVotes();
-                    setTrumpVotes();
-                }
-                function setBidenVotes() {
-                    contractInstance.methods.no_of_votes("Biden").call(function(error,voteCount){
-                        document.getElementById("BidenVotes").innerText = voteCount;
-                    })
-                }
-                function setTrumpVotes() {
-                    contractInstance.methods.no_of_votes("Trump").call(function(error,voteCount){
-                        document.getElementById("TrumpVotes").innerText = voteCount;
-                    })
-                }
+            let contractAddress = "0xb0cf03646bb16b85afd3fb73387d5f6360c6ffc8";
+            async function init() {
+                let walletCon = await window.ethereum.enable();
+                walletAddress = walletCon[0]; 
+                web3Instance = new window.Web3(window.ethereum);
+                console.log(web3Instance);
+                contInstance = new web3Instance.eth.Contract(abiJson,contractAddress);
+                console.log(contInstance)
+                get_no_of_votes();
+            }
+            init();
+            function vote(candName){
+                contInstance._methods.voting(candName).send({from: walletAddress})
+                .on('receipt', function(receipt){
+                    console.log(receipt);
+                    if(receipt.status) {
+                        get_no_of_votes();
+                        return alert("Successfully voted");
+                    }
+                    else {
+                        return alert("Transaction failed");
+                    }
+                })
+            }
+
+            function get_no_of_votes() {
+                contInstance._methods.no_of_votes("TRUMP").call()
+                .then(function(trumpVotes){
+                    document.getElementById("trumpVotes").innerText = trumpVotes; 
+                });
+                contInstance._methods.no_of_votes("BIDEN").call()
+                .then(function(bidenVotes){
+                    document.getElementById("bidenVotes").innerText = bidenVotes; 
+                });
+            }
+
+            function result() {
+                contInstance._methods.result().call()
+                .then(function(status){
+                    return alert(status)
+                });
+            }
         </script>
-        <style>
-            body{
-                text-align: center;
-            }
-            div.parentCandDiv {
-                display: flex;
-            }
-            .candDiv {
-                margin: auto;
-            }
-            .candImg {
-                width: 300px;
-                height: 377px;
-                border-radius: 14px;
-            }
-            .voteBtn {
-                width: 180px;
-                height: 60px;
-                font-size: 20px;
-                color: red;
-                background: aqua;
-                border-radius: 14px;
-            }
-            .ResultBtn {
-                margin-top: 55px;
-                width: 180px;
-                height: 60px;
-                font-size: 20px;
-                color:  white;
-                background: red;
-                border-radius: 14px;
-            }
-            .voteTxt {
-                font-size: 25px;
-            }
-            .walletDet{
-                border: 1px solid grey;
-                width: 615px;
-                margin-left: auto;
-            }
-        </style>
     </body>
 </html>
