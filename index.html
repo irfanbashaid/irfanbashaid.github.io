@@ -1,177 +1,230 @@
 <html>
     <head>
-        <title>voting</title>
-        <script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js@1.0.0-beta.34/dist/web3.min.js"></script>
+        <title>Blockchain Voting</title>
+        <script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js@1.0.0-beta.34/dist/web3.js"></script>
     </head>
     <body>
-        <h2>Ethereum voting</h2>
+        <h1>
+            Blockchain based voting application
+        </h1>
         <div id="parentDiv">
             <div id="trumpDiv">
-                <h3>Trump</h3>
+                <h4>Trump</h4>
                 <img src="https://upload.wikimedia.org/wikipedia/commons/5/56/Donald_Trump_official_portrait.jpg"/>
-                <h5>Votes:<span id="TrumpVoteId">0</span></h5>
-                <button class="voteButton" onclick="voting('Trump')">Vote</button>
+                <h5>No of Votes: <span id="TRUMPVOTE">0</span></h5>
+                <button onclick="voting('TRUMP')">Vote</button>
             </div>
             <div id="bidenDiv">
-                <h3>Biden</h3>
+                <h4>Biden</h4>
                 <img src="https://upload.wikimedia.org/wikipedia/commons/6/68/Joe_Biden_presidential_portrait.jpg"/>
-                <h5>Votes:<span id="BidenVoteId">0</span></h5>
-                <button class="voteButton" onclick="voting('Biden')">Vote</button>
+                <h5>No of Votes: <span id="BIDENVOTE">0</span></h5>
+                <button onclick="voting('BIDEN')">Vote</button>
             </div>
         </div>
-        <button class="resultBtn" onclick="result()">Result</button>
+        <div id="footerDiv">
+            <button onclick="result()">Result</button>
+        </div>
         <script>
-            let web3Ins = new window.Web3(window.ethereum);
-            let pubAddr = "";
-            let contractIns;
+            // console.log(window);
+            let web3Instance;
+            let account_address = "";
+            let dapp_cont_address = "0xdd31e9c04bc95123c3a3b0d019ef456e33e0dea2";
             let abiJson = [
-                {
-                    "constant": false,
-                    "inputs": [],
-                    "name": "startVoting",
-                    "outputs": [],
-                    "payable": false,
-                    "stateMutability": "nonpayable",
-                    "type": "function"
-                },
-                {
-                    "inputs": [],
-                    "payable": false,
-                    "stateMutability": "nonpayable",
-                    "type": "constructor"
-                },
-                {
-                    "constant": false,
-                    "inputs": [
-                        {
-                            "internalType": "string",
-                            "name": "candName",
-                            "type": "string"
-                        }
-                    ],
-                    "name": "voting",
-                    "outputs": [],
-                    "payable": false,
-                    "stateMutability": "nonpayable",
-                    "type": "function"
-                },
-                {
-                    "constant": true,
-                    "inputs": [],
-                    "name": "getCurrentTime",
-                    "outputs": [
-                        {
-                            "internalType": "uint256",
-                            "name": "",
-                            "type": "uint256"
-                        }
-                    ],
-                    "payable": false,
-                    "stateMutability": "view",
-                    "type": "function"
-                },
-                {
-                    "constant": true,
-                    "inputs": [],
-                    "name": "result",
-                    "outputs": [
-                        {
-                            "internalType": "string",
-                            "name": "",
-                            "type": "string"
-                        }
-                    ],
-                    "payable": false,
-                    "stateMutability": "view",
-                    "type": "function"
-                },
-                {
-                    "constant": true,
-                    "inputs": [
-                        {
-                            "internalType": "string",
-                            "name": "",
-                            "type": "string"
-                        }
-                    ],
-                    "name": "voteCountMap",
-                    "outputs": [
-                        {
-                            "internalType": "uint256",
-                            "name": "",
-                            "type": "uint256"
-                        }
-                    ],
-                    "payable": false,
-                    "stateMutability": "view",
-                    "type": "function"
-                }
-            ];
-            let contractAddress = "0xf061c1eafa3a070ba0bb2fd3eed31c64c3924896";
-            init = async() =>{
-                let walletAddr = await window.ethereum.enable();
-                pubAddr = walletAddr[0];
-                contractIns = new web3Ins.eth.Contract(abiJson,contractAddress)
-                getVotes()
+	{
+		"inputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "getBlockchainTime",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "isVoted",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"name": "no_of_votes",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"name": "registeredCandidatesMap",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "result",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [],
+		"name": "startVoting",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "candName",
+				"type": "string"
+			}
+		],
+		"name": "voting",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	}
+]
+            let contIns;
+            
+            async function init(){
+                let metamaskRes = await window.ethereum.enable();
+                web3Instance = new Web3(window.ethereum);
+                account_address = metamaskRes[0];
+                contIns = new web3Instance.eth.Contract(abiJson,dapp_cont_address);
+                // no_of_votes("BIDEN");
+                // no_of_votes("TRUMP");
+
             }
             init();
-            function getVotes() {
-                _getVotes("Biden");
-                _getVotes("Trump");
-            }
-            function _getVotes(candName) {
-                // console.log(candName)
-                contractIns.methods.voteCountMap(candName).call().then(function(result){
-                    // console.log(result)
-                    let spanId = candName+"VoteId"
-                    document.getElementById(spanId).innerText = result;
+
+            function voting(candName) {
+                contIns.methods.voting(candName).send({from:account_address}).on('receipt', function(receipt){
+                    if(receipt.status) {
+                        no_of_votes(candName);
+                        return alert("Successfully voted!");
+                    }
+                    else {
+                        return alert("Transaction failed!")
+                    }
                 })
             }
 
-            function voting(candName) {
-                contractIns.methods.voting(candName).send({from:pubAddr}).then(function(result){
-                    if(result.status) {
-                        alert("successfully voted");
-                        getVotes();
-                        return;
-                    }
-                    else {
-                        return alert("transaction failed");
-                    }
+            function no_of_votes(candName) {
+                contIns.methods.no_of_votes(candName).call().then(function(result){
+                    document.getElementById(candName+"VOTE").innerText = result;
                 })
             }
+
             function result() {
-                contractIns.methods.result().call().then(function(result){
+                contIns.methods.result().call().then(function(result){
                     return alert(result);
                 })
             }
+
         </script>
+        <style>
+            body {
+                text-align: center;
+            }
+            img {
+                height: 300px;
+                width: 200px;
+                border-radius: 7px;
+            }
+
+            button {
+                background-color: burlywood;
+                color: black;
+                padding: 10px 20px;
+            }
+
+            #footerDiv button {
+                margin-top: 20px;
+                background-color: darkorange;
+                color: black;
+            } 
+            
+            #parentDiv {
+                display: flex;
+            }
+            #trumpDiv {
+                margin-left: auto;
+                margin-right: 10px;
+            }
+            #bidenDiv {
+                margin-right: auto;
+                margin-left: 10px;
+            }
+        </style>
     </body>
-    <style>
-        body {
-            text-align: center;
-        }
-        img {
-            width: 200px;
-            border-radius: 14px;
-        }
-        #parentDiv {
-            display: flex;
-        }
-        #bidenDiv, #trumpDiv {
-            margin: auto;
-        }
-        .voteButton {
-            background: blue;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 7px;
-        }
-        .resultBtn {
-            margin-top: 45px;
-            padding: 20px 40px;
-            background: aqua;
-            border-radius: 7px;
-        }
-    </style>
 </html>
