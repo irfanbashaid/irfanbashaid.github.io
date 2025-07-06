@@ -1,34 +1,184 @@
 <html>
     <head>
-        <title>Blockchain Voting</title>
-        <link rel="stylesheet" href="index.css" type="text/css"/>
-        <script src="https://cdn.jsdelivr.net/npm/web3@4.16.0/dist/web3.min.js" type="text/javascript"></script>
-        <script src="index.js"></script>
+        <title>Voting platform</title>
+        <script src="https://cdn.jsdelivr.net/npm/web3@4.16.0/dist/web3.min.js"></script>
     </head>
     <body>
-        <p>Blockchain based voting platform</p>
-        <div>
-            <p>wallet Address: <span id="walletAddress"></span></p>
-            <p>Balance : <span id="walletBalance"></span> Ether</p>
-        </div>
-        <div class="parentDiv">
-            <div class="trumpDiv">
-                <p>TRUMP</p>
-                <img src="https://upload.wikimedia.org/wikipedia/commons/8/83/TrumpPortrait.jpg" alt="trump photo"/>
-                <br />
-                <button class="voteBtn" onclick="voting('TRUMP')">Vote</button>
-                <p>Votes Received so far: <span id="TRUMPVOTES"></span></p>
+        <h2>Ethereum blockchain based voting platform</h2>
+        <div id="parendDiv">
+            <div id="trump">
+                <p>Trump</p>
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/Official_Presidential_Portrait_of_President_Donald_J._Trump_%282025%29.jpg/800px-Official_Presidential_Portrait_of_President_Donald_J._Trump_%282025%29.jpg"/>
+                <br/>
+                <br/>
+                <p>Vote Count:<span id="trumpVoteCount"></span></p>
+                <br/>
+                <button onclick="vote('TRUMP')">Vote</button>
             </div>
-            <div class="bidenDiv">
-                <p>BIDEN</p>
-                <img src="https://upload.wikimedia.org/wikipedia/commons/6/68/Joe_Biden_presidential_portrait.jpg" alt="biden photo"/>
-                <br />
-                <button class="voteBtn" onclick="voting('BIDEN')">Vote</button>
-                <p>Votes Received so far: <span id="BIDENVOTES"></span></p>
+            <div id="biden">
+                <p>Biden</p>
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/Joe_Biden_presidential_portrait.jpg/800px-Joe_Biden_presidential_portrait.jpg"/>
+                <br/>
+                <br/>
+                <p>Vote Count:<span id="bidenVoteCount"></span></p>
+                <br/>
+                <button onclick="vote('BIDEN')">Vote</button>
             </div>
         </div>
-        <div>
-            <button class="resultBtn" onclick="result()">Result</button>
-        </div>
+        <br/>
+        <br/>
+        <br/>
+        <br/>
+
+        <button onclick="result()">Result</button>
+        <style>
+            body {
+                text-align: center;
+            }
+            img {
+                width: 300px;
+                border-radius: 7px;    
+            }
+            #parendDiv {
+                display: flex;
+            }
+            #trump {
+                margin-left: auto;
+                margin-right: 5px;
+            }
+            #biden {
+                margin-left: 5px;
+                margin-right: auto;
+            }
+            button {
+                padding: 10px 20px;
+                background-color: aqua;
+            }
+        </style>
     </body>
+    <script>
+        console.log(window.web3);
+        let abiJson = [
+	{
+		"constant": false,
+		"inputs": [],
+		"name": "startVoting",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "candidateName",
+				"type": "string"
+			}
+		],
+		"name": "voting",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "getBlockchainTime",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "candidateName",
+				"type": "string"
+			}
+		],
+		"name": "getVoteCount",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "result",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	}
+];
+        let contractAddress = "0x80d283e367de0787ad3262b02954e6780a2ffe02";
+        let contractIns;
+        let walletAddress = '';
+        async function initialize() {
+            let accAddress = await window.ethereum.enable();
+            console.log(accAddress);
+            walletAddress = accAddress[0];
+            let web3Ins = new window.Web3(window.ethereum);
+            console.log(web3Ins)
+            contractIns = new web3Ins.eth.Contract(abiJson, contractAddress);
+            console.log("contractIns",contractIns)
+            getVoteCount();
+        }
+        initialize();
+        function result() {
+            contractIns.methods.result().call().then((result)=>{return alert(result)});
+        }
+
+        function getVoteCount() {
+            contractIns.methods.getVoteCount("TRUMP").call().then((result)=>{
+                document.getElementById("trumpVoteCount").innerHTML = result; 
+            });
+            contractIns.methods.getVoteCount("BIDEN").call().then((result)=>{
+                document.getElementById("bidenVoteCount").innerHTML = result; 
+            });
+        }
+
+        function vote(candName) {
+            contractIns.methods.voting(candName).send({from:walletAddress}).on('receipt', function(receipt){
+                if(receipt.status) {
+                    getVoteCount();
+                    return alert("Successfully Voted")
+                } else {
+                    getVoteCount();
+                    return alert("Transaction failed")
+                }
+            })
+        }
+
+    </script>
 </html>
