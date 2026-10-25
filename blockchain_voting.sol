@@ -1,57 +1,60 @@
 pragma solidity ^0.5.0;
-
-contract Blockchain_voting {
-
-    constructor() public{
-        _candReg("TRUMP");
-        _candReg("BIDEN");
+contract VotingContract {
+    //cand reg
+    mapping(string=>bool) isCandRegistered;
+    function candidateRegisteration() private {
+        isCandRegistered["TRUMP"] = true;
+        isCandRegistered["BIDEN"] = true;
+    }
+    constructor() public {
+        candidateRegisteration();
+    }
+    
+    mapping(string => uint) voteCount;
+    mapping(address => bool) isAlreadyVoted;
+    function voting(string memory _candName) public{
+        //_candName isRegistered?
+        //is voting started?
+        //is voting inProgress?
+        //is already voted?
+        require(isCandRegistered[_candName],"Invalid candidate");
+        require(votingStartTime!=0, "please wait! voting yet to start");
+        require(votingStartTime+votingDuration > getBlockchainTime(), "Voting Ends");
+        require(!isAlreadyVoted[msg.sender], "Already voted");
+        voteCount[_candName]++;
+        isAlreadyVoted[msg.sender] = true;
     }
 
-    mapping(string=>bool) public registeredCandidatesMap;
-    mapping(address=>bool) public isVoted;
-    mapping(string=>uint) public no_of_votes;
-    function _candReg(string memory _candName) internal {
-        registeredCandidatesMap[_candName] = true;
+    function getBlockchainTime() public view returns (uint){
+        return block.timestamp;
     }
-
-    function voting(string memory candName) public {
-        require(registeredCandidatesMap[candName],"Invalid Candidate!");
-        require(votingStartTime>0,"Voting not started!");
-        require(votingStartTime+votingDuration>getBlockchainTime(),"Voting already ends!");
-        require(!isVoted[msg.sender],"Already voted!");
-        no_of_votes[candName]++;
-        isVoted[msg.sender] = true;
-    }
-
-    uint votingStartTime;
+   
+    uint votingStartTime = 0;
     uint votingDuration = 5 minutes;
     function startVoting() public {
         votingStartTime = getBlockchainTime();
     }
 
-    function getBlockchainTime() public view returns(uint){
-        return block.timestamp;
+    function noOfVotes(string memory candName) public view returns(uint) {
+        return voteCount[candName];
     }
-        
-    function result() public view returns(string memory) {
-        if(votingStartTime>0){
-            if(votingStartTime+votingDuration<getBlockchainTime()){
-                if(no_of_votes["TRUMP"] > no_of_votes["BIDEN"]) {
+
+    function result_state() public view returns(string memory) {
+        if(votingStartTime!=0) {
+            if(votingStartTime+votingDuration<getBlockchainTime()) {
+                if(voteCount["TRUMP"] > voteCount["BIDEN"]) {
                     return "Trump won the election";
-                }
-                else if(no_of_votes["TRUMP"] < no_of_votes["BIDEN"]) {
+                } else if(voteCount["BIDEN"] > voteCount["TRUMP"]){
                     return "Biden won the election";
-                }
-                else {
+                } else {
                     return "Tie! no result";
                 }
+            } else {
+                return "please wait! voting is inProgress";
             }
-            else {
-                return "Voting not ends!";
-            }
-        }
-        else {
+        } else {
             return "Voting not started!";
         }
     }
+
 }
